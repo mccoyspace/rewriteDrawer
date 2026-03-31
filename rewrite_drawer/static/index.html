@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rewrite Drawer</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="controls">
+        <div class="panel-header">
+          <p class="eyebrow">Local Rewrite Lab</p>
+          <h1>Rewrite Drawer</h1>
+          <p class="lede">
+            Page-13-inspired graph growth for plotter output.
+          </p>
+        </div>
+
+        <section class="panel">
+          <h2>Simulation</h2>
+          <label>
+            <span>Seed</span>
+            <select id="seedType"></select>
+          </label>
+          <label>
+            <span>Frames</span>
+            <input id="frames" type="number" min="1" max="120" value="24" />
+          </label>
+          <label>
+            <span>Events / frame</span>
+            <input id="eventsPerFrame" type="number" min="1" max="500" value="30" />
+          </label>
+          <label>
+            <span>Event selection</span>
+            <select id="eventSelection"></select>
+          </label>
+          <label>
+            <span>Random seed</span>
+            <input id="randomSeed" type="number" min="0" max="9999999" value="13" />
+          </label>
+          <label>
+            <span>Layout iterations</span>
+            <input id="layoutIterations" type="number" min="1" max="300" value="60" />
+          </label>
+          <label>
+            <span>Layout spread</span>
+            <input id="layoutSpread" type="number" min="0.1" max="5" step="0.05" value="1.15" />
+          </label>
+          <label>
+            <span>Spawn jitter</span>
+            <input id="spawnJitter" type="number" min="0" max="1" step="0.01" value="0.08" />
+          </label>
+          <div class="button-row">
+            <button id="generateButton" class="primary">Generate</button>
+            <button id="playButton">Play</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Display + Export</h2>
+          <label>
+            <span>Draw mode</span>
+            <select id="drawMode"></select>
+          </label>
+          <label>
+            <span>Shortest-edge keep %</span>
+            <input id="keepPercent" type="number" min="1" max="100" value="65" />
+          </label>
+          <label>
+            <span>Recent-edge window</span>
+            <input id="recentWindow" type="number" min="1" max="100000" value="150" />
+          </label>
+          <label>
+            <span>Canvas width (horizontal / machine Y, mm)</span>
+            <input id="pageWidth" type="number" min="10" max="5000" value="1000" />
+          </label>
+          <label>
+            <span>Canvas height (vertical / machine X, mm)</span>
+            <input id="pageHeight" type="number" min="10" max="5000" value="1000" />
+          </label>
+          <label>
+            <span>Margin (mm)</span>
+            <input id="margin" type="number" min="0" max="500" value="30" />
+          </label>
+          <label>
+            <span>Stroke width (mm)</span>
+            <input id="strokeWidth" type="number" min="0.01" max="20" step="0.01" value="0.5" />
+          </label>
+          <label>
+            <span>G-code profile</span>
+            <select id="gcodeProfile"></select>
+          </label>
+          <button id="exportButton" class="primary">Export Current Frame</button>
+          <p class="panel-note">
+            Canvas coordinates are treated as millimeters for machine output. For your machine, horizontal canvas distance becomes machine <code>Y</code> and vertical canvas distance becomes machine <code>X</code>. Both exported machine G-code paths now remap into that axis convention.
+          </p>
+        </section>
+
+        <section class="panel">
+          <h2>Remote Stream</h2>
+          <label>
+            <span>Plotter Server URL</span>
+            <input id="remoteUrl" type="text" placeholder="ws://127.0.0.1:8000/ws or 127.0.0.1:8000" />
+          </label>
+          <label>
+            <span>Program preamble</span>
+            <textarea id="programPreamble" rows="4"></textarea>
+          </label>
+          <label>
+            <span>Program epilogue</span>
+            <textarea id="programEpilogue" rows="3"></textarea>
+          </label>
+          <label>
+            <span>Draw feed (mm/min)</span>
+            <input id="drawFeed" type="number" min="1" max="50000" value="1800" />
+          </label>
+          <label class="checkbox-row">
+            <input id="enableRemoteModeBeforeSend" type="checkbox" checked />
+            <span>Enable remote mode before send</span>
+          </label>
+          <label class="checkbox-row">
+            <input id="parkAfterSend" type="checkbox" />
+            <span>Park after send</span>
+          </label>
+          <div class="inline-fields">
+            <label>
+              <span>Park X (vertical / machine X, mm)</span>
+              <input id="parkX" type="number" min="-5000" max="5000" value="0" />
+            </label>
+            <label>
+              <span>Park Y (horizontal / machine Y, mm)</span>
+              <input id="parkY" type="number" min="-5000" max="5000" value="0" />
+            </label>
+          </div>
+          <label>
+            <span>Message pause (ms)</span>
+            <input id="messagePause" type="number" min="0" max="5000" value="0" />
+          </label>
+          <label>
+            <span>Receive timeout (ms)</span>
+            <input id="receiveTimeout" type="number" min="0" max="10000" value="250" />
+          </label>
+          <div class="button-row">
+            <button id="previewRemoteButton">Preview Remote Job</button>
+            <button id="sendRemoteButton" class="primary">Send to Plotter Server</button>
+          </div>
+          <p class="panel-note">
+            This now targets the actual GRBL plotter server protocol from your local server files: JSON websocket messages on <code>/ws</code>, auto-enabling remote mode if requested, then queuing each G-code line as an <code>external_command</code>. On that server, enabling remote mode stops any local stream and resets the remote queue.
+          </p>
+        </section>
+      </aside>
+
+      <main class="stage">
+        <section class="viewer">
+          <div class="viewer-bar">
+            <div class="status-cluster">
+              <p id="statusText">Loading options...</p>
+              <p id="frameSummary"></p>
+            </div>
+            <div class="transport">
+              <label class="scrubber">
+                <span>Frame</span>
+                <input id="frameSlider" type="range" min="0" max="0" value="0" />
+              </label>
+            </div>
+          </div>
+          <canvas id="previewCanvas"></canvas>
+        </section>
+
+        <section class="bottom-panels">
+          <section class="exports panel">
+            <h2>Export Output</h2>
+            <div id="exportLinks" class="link-list">
+              <p>No exports yet.</p>
+            </div>
+          </section>
+
+          <section class="exports panel">
+            <h2>Remote Program</h2>
+            <p id="remoteSummary" class="panel-note">
+              No remote job preview yet.
+            </p>
+            <textarea id="remotePreview" class="code-preview" readonly spellcheck="false"></textarea>
+            <div id="remoteResponses" class="link-list">
+              <p>No remote responses yet.</p>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
