@@ -27,7 +27,7 @@ Rewrite Drawer serves as a generator for autocritic's improvement loop. With bot
 python3 run_local.py
 
 # In another:
-python3 -m autocritic run --critic wolfflin --generator wolfram --model openai:gpt-5.4-mini --iterations 5
+python3 -m autocritic run --critic wolfflin --generator rewriter --model openai:gpt-5.4-mini --iterations 5
 ```
 
 The critic evaluates each generated image through an art-theory lens and steers the simulation parameters toward more compositionally coherent results.
